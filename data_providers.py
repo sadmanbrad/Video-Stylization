@@ -46,7 +46,9 @@ class PatchedDataProvider(object):
             image_stylized = PIL.Image.open(os.path.join(y_dir, p_png))
 
             image = keras.preprocessing.image.img_to_array(image)
+            image = image[:, :, 0:3] / 255.0
             image_stylized = keras.preprocessing.image.img_to_array(image_stylized)
+            image_stylized = image_stylized[:, :, 0:3] / 255.0
 
             self.images.append(image)
             self.images_stylized.append(image_stylized)
