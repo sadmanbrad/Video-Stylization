@@ -48,7 +48,7 @@ class Trainer(object):
         if self.perception_loss_model is not None:
             fake_features = self.perception_loss_model(generated)
             target_features = self.perception_loss_model(batch_y)
-            perception_loss = ((fake_features - target_features) ** 2).mean()
+            perception_loss = keras.losses.MeanSquaredError()(target_features, fake_features).numpy()
 
         fake_smiling_labels = discriminator(generated)
         adversarial_loss = self.adversarial_criterion(fake_smiling_labels, np.ones_like(fake_smiling_labels))
