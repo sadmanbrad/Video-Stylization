@@ -47,9 +47,9 @@ def make_smoother(filter_size, input_layer, kernel_size):
 def make_generator():
     resnet_blocks = 7
     filters = [32, 64, 128, 128, 128, 64]
-    input_channels = 6
+    input_channels = 3
     patch_size = (32, 32)
-    input_shape = (256, 256, input_channels)
+    input_shape = (None, None, input_channels)
 
     input_layer = keras.layers.Input(shape=input_shape)
     conv0 = make_conv(filters[0], input_layer, (7, 7), (1, 1))
@@ -57,11 +57,8 @@ def make_generator():
     conv2 = make_conv(filters[2], conv1, (3, 3), (2, 2))
 
     resnet_blocks_out = conv2
-    print(conv2.shape)
     for i in range(resnet_blocks):
-        print(resnet_blocks_out.shape)
         resnet_block = make_resnet(filters[2], resnet_blocks_out, (3, 3), (1, 1))
-        print(resnet_block.shape)
         resnet_blocks_out = keras.layers.Add()([resnet_block, resnet_blocks_out])
 
     upconv2_in = keras.layers.Concatenate()([resnet_blocks_out, conv2])
@@ -85,7 +82,7 @@ def make_discriminator():
     filters = 12
     input_channels = 3
     patch_size = (32, 32)
-    input_shape = (256, 256, input_channels)
+    input_shape = (None, None, input_channels)
 
     input_layer = keras.layers.Input(shape=input_shape)
 
@@ -100,7 +97,7 @@ def make_discriminator():
 
     flt_mult = min(2 ** number_of_layers, 8)
 
-    conv_last = make_conv(last_layer, filters * flt_mult, (4, 4), (1, 1))
+    conv_last = make_conv(filters * flt_mult, last_layer, (4, 4), (1, 1))
 
     output = keras.layers.Conv2D(1, kernel_size=(4, 4), strides=(1, 1), padding='same', use_bias=True)(conv_last)
 
