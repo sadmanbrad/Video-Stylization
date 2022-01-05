@@ -1,0 +1,7 @@
+generated/
+generator/
+.idea/
+
+__pycache__/
+images/
+venv/
