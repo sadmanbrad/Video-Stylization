@@ -100,11 +100,14 @@ class Trainer(object):
 
                 batch_num += 1
 
-                # Log every 200 batches.
-                if step % 200 == 0:
-                    print(
-                        "Training loss (for one batch) at step %d: %.4f"
-                        % (step, float(loss_value))
-                    )
-                    print("Seen so far: %s samples" % ((step + 1) * 64))
-                pass
+                if batch_num % 100 == 0:
+                    print(f"Batch num: {batch_num}, totally elapsed {(time.time() - start)}", flush=True)
+
+                if batch_num % 1000 == 0:  # (time.time() - start) > 16:
+                    eval_start = time.time()
+                    full_image = self.train_dataset.get_single_full_image()
+                    generated = generator(full_image.reshape((1,) + full_image.shape))
+                    keras.utils.save_img(f'generated/{batch_num//1000:03}.png', generated[0],
+                                         data_format='channels_last')
+                    generator.save('generator')
+                    print(f"Eval of batch: {batch_num} took {(time.time() - eval_start)}", flush=True)
