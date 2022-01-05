@@ -103,3 +103,11 @@ def make_discriminator():
 
     return keras.Model(inputs=input_layer, outputs=output)
 
+
+def make_perception_loss_model(feature_layers):
+    model = keras.applications.VGG19(include_top=False, weights='imagenet')
+
+    features = [keras.layers.Flatten()(model.layers[layer].output) for layer in feature_layers]
+    cat = keras.layers.Concatenate(axis=1)(features)
+
+    return keras.Model(inputs=model.input, outputs=cat)
