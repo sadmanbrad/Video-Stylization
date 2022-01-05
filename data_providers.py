@@ -51,25 +51,33 @@ class PatchedDataProvider(object):
             self.images.append(image)
             self.images_stylized.append(image_stylized)
 
+        self.valid_midpoints = []
+        for im_index in range(len(self.images)):
+            self.valid_midpoints.append([])
+            for i in range(patch_size // 2, self.images[im_index].shape[0] - patch_size // 2):
+                for j in range(patch_size // 2, self.images[im_index].shape[1] - patch_size // 2):
+                    self.valid_midpoints[im_index].append((i, j))
+
+        self.valid_indices = [list(range(len(self.valid_midpoints[im_index]))) for im_index in
+                              range(len(self.images))]
+
     def cut_patch(self, im, midpoint, size):
         hs = size // 2
         hn = max(0, midpoint[0] - hs)
-        hx = min(midpoint[0] + hs, im.size()[1] - 1)
+        hx = min(midpoint[0] + hs, im.shape[0] - 1)
         xn = max(0, midpoint[1] - hs)
-        xx = min(midpoint[1] + hs, im.size()[2] - 1)
+        xx = min(midpoint[1] + hs, im.shape[1] - 1)
 
-        p = im[:, hn:hx, xn:xx]
-        if p.size()[1] != size or p.size()[2] != size:
-            r = np.zeros((3, size, size))
-            r[:, 0:p.size()[1], 0:p.size()[2]] = p
+        p = im[hn:hx, xn:xx, :]
+        if p.shape[0] != size or p.shape[1] != size:
+            r = np.zeros((size, size, 3))
+            r[0:p.shape[0], 0:p.shape[1], :] = p
             p = r
 
         return p
 
-
     def cut_patches(self, im_index, midpoint, midpoint_r, size):
         patch_input = self.cut_patch(self.images[im_index], midpoint, size)
-
         patch_stylized = self.cut_patch(self.images_stylized[im_index], midpoint, size)
         patch_random = self.cut_patch(self.images_stylized[im_index], midpoint_r, size)
 
@@ -77,35 +85,22 @@ class PatchedDataProvider(object):
 
     def __getitem__(self, item):
         im_index = item % len(self.images)
-        midpoint_id = np.random.randint(0, len(self.valid_indices_left[im_index]))
-        midpoint_r_id = np.random.randint(0, len(self.valid_indices[im_index]))
-        midpoint = self.valid_indices[im_index][self.valid_indices_left[im_index][midpoint_id], :].squeeze()
-        midpoint_r = self.valid_indices[im_index][midpoint_r_id, :].squeeze()
+        midpoint_id = int(np.random.randint(0, len(self.valid_indices[im_index])))
+        midpoint_index = self.valid_indices[im_index][midpoint_id]
+        midpoint_r_id = np.random.randint(0, len(self.valid_midpoints[im_index]))
+        midpoint_r = self.valid_midpoints[im_index][midpoint_r_id]
+        midpoint = self.valid_midpoints[im_index][midpoint_index]
 
-        del self.valid_indices_left[im_index][midpoint_id]
-        if len(self.valid_indices_left[im_index]) < 1:
-            self.valid_indices_left[im_index] = list(range(0, len(self.valid_indices[im_index])))
+        del self.valid_indices[im_index][midpoint_id]
+        if len(self.valid_indices[im_index]) < 1:
+            self.valid_indices[im_index] = list(range(0, len(self.valid_midpoints[im_index])))
 
-        result = {}
+        patch_pre, patch_post, patch_random = self.cut_patches(im_index, midpoint, midpoint_r, self.patch_size)
 
-        for i in range(0, 1):  # range(im_index - self.temporal_frames, im_index + self.temporal_frames + 1):
-            is_curr_item = True  # if i == im_index else False
-            # i = max(0, i)
-            # i = min(len(self.images_pre)-1, i)
-
-            patch_pre, patch_post, patch_random = self.cut_patches(im_index, midpoint, midpoint_r, self.patch_size)
-
-            if "pre" not in result:
-                result['pre'] = patch_pre
-            else:
-                result['pre'] = torch.cat((result['pre'], patch_pre), dim=0)
-
-            if is_curr_item:
-                result['post'] = patch_post
-            if is_curr_item:
-                result['already'] = patch_random
-
-        return result
+        return patch_pre, patch_post, patch_random
 
     def __len__(self):
-        return sum([(n.numel() // 2) for n in self.valid_indices]) * 5  # dont need to restart
+        return sum([(len(n) // 2) for n in self.valid_midpoints]) * 5  # dont need to restart
+
+    def get_full_image(self):
+        return self.images[0]
