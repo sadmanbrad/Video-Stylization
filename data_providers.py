@@ -21,6 +21,30 @@ def get_geometric_blur_patch(tensor_small, midpoint, patchsize, coeff):
     return p
 
 
+class BatchProvider(object):
+    def __init__(self, base_provider, batch_size):
+        self.batch_size = batch_size
+        self.base_provider = base_provider
+
+    def get_single_full_image(self):
+        return self.base_provider.get_full_image()
+
+    def __getitem__(self, item):
+        pres = []
+        posts = []
+        rands = []
+        for i in range(self.batch_size):
+            patch_pre, patch_post, patch_random = self.base_provider[item * self.batch_size + i]
+            pres.append(patch_pre)
+            posts.append(patch_post)
+            rands.append(patch_random)
+
+        return np.array(pres), np.array(posts), np.array(rands)
+
+    def __len__(self):
+        return len(self.base_provider)/self.batch_size
+
+
 #####
 # Default "patch" dataset, used for training
 #####
