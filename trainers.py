@@ -1,17 +1,32 @@
+import time
+
 from tensorflow import keras
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 
 class Trainer(object):
-    def __init__(self, generator_optimizer, discriminator_optimizer, perception_loss_model=None):
+    def __init__(self, generator_optimizer, discriminator_optimizer, train_dataset, perception_loss_model=None):
         self.generator_optimizer = generator_optimizer
         self.discriminator_optimizer = discriminator_optimizer
 
         self.use_image_loss = perception_loss_model is not None
         self.perception_loss_model = perception_loss_model
+        self.train_dataset = train_dataset
+
+        self.adversarial_criterion = keras.losses.MeanSquaredError()
+        self.adversarial_weight = 0.5
+        self.reconstruction_weight = 4.
+        self.perception_weight = 6.
 
         pass
+
+    def compute_discriminator_loss(self, fake_labels, true_labels):
+        discriminator_loss = self.adversarial_criterion(fake_labels, np.zeros_like(fake_labels))
+        discriminator_loss += self.adversarial_criterion(true_labels, np.ones_like(true_labels))
+
+        return discriminator_loss
 
     def compute_generator_loss(self, generated, discriminator, batch_y):
         image_loss = 0
@@ -36,37 +51,54 @@ class Trainer(object):
             perception_loss = ((fake_features - target_features) ** 2).mean()
 
         fake_smiling_labels = discriminator(generated)
-        adversarial_loss = keras.losses.MeanSquaredError()(fake_smiling_labels, np.ones_like(fake_smiling_labels))
+        adversarial_loss = self.adversarial_criterion(fake_smiling_labels, np.ones_like(fake_smiling_labels))
 
-        return image_loss, perception_loss, adversarial_loss, generated
+        return image_loss, perception_loss, adversarial_loss
 
     def train(self, generator, discriminator, epochs):
-        np.random.seed()
+        batch_num = 0
+        start = time.time()
         for e in range(epochs):
-            for step, (x_batch_train, y_batch_train) in enumerate(self.train_dataset):
+            np.random.seed()
+            for step, (x_train, y_train, y_random) in enumerate(self.train_dataset):
+
+                generated = generator(x_train)
+                with tf.GradientTape() as dtape:
+                    fake_labels = discriminator(generated, training=True)
+                    true_labels = discriminator(y_random, training=True)
+                    discriminator_loss = self.compute_discriminator_loss(fake_labels, true_labels)
+
+                dgrads = dtape.gradient(discriminator_loss, discriminator.trainable_weights)
+
+                self.discriminator_optimizer.apply_gradients(zip(dgrads, discriminator.trainable_weights))
 
                 # Open a GradientTape to record the operations run
                 # during the forward pass, which enables auto-differentiation.
-                with tf.GradientTape() as tape:
+                with tf.GradientTape() as gtape:
 
                     # Run the forward pass of the layer.
                     # The operations that the layer applies
                     # to its inputs are going to be recorded
                     # on the GradientTape.
                     # Output for this mini batch
-                    generated = generator(x_batch_train, training=True)
+                    generated = generator(x_train, training=True)
 
                     # Compute the loss value for this mini batch.
-                    loss_value = self.compute_generator_loss(generated, discriminator,  y_batch_train)
+                    image_loss, perception_loss, adversarial_loss = self.compute_generator_loss(generated,
+                                                                                                discriminator, y_train)
+                    generator_loss = self.reconstruction_weight * image_loss + \
+                        self.adversarial_weight * adversarial_loss + \
+                        self.perception_weight * perception_loss
 
                 # Use the gradient tape to automatically retrieve
                 # the gradients of the trainable variables with respect to the loss.
-                grads = tape.gradient(loss_value, generator.trainable_weights)
+                ggrads = gtape.gradient(generator_loss, generator.trainable_weights)
 
                 # Run one step of gradient descent by updating
                 # the value of the variables to minimize the loss.
-                self.generator_optimizer.apply_gradients(
-                    zip(grads, generator.trainable_weights))
+                self.generator_optimizer.apply_gradients(zip(ggrads, generator.trainable_weights))
+
+                batch_num += 1
 
                 # Log every 200 batches.
                 if step % 200 == 0:
