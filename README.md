@@ -1,3 +1,3 @@
-#Temporally-Consistent Style Transfer in Videos 
+# Temporally-Consistent Style Transfer in Videos 
 
 ![Sample output](resources/comparison.gif) 
