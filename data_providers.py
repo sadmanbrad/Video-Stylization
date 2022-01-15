@@ -5,22 +5,6 @@ from tensorflow import keras
 import numpy as np
 
 
-def get_geometric_blur_patch(tensor_small, midpoint, patchsize, coeff):
-    midpoint = midpoint // coeff
-    hs = patchsize // 2
-    hn = max(0, midpoint[0] - hs)
-    hx = min(midpoint[0] + hs, tensor_small.size()[1] - 1)
-    xn = max(0, midpoint[1] - hs)
-    xx = min(midpoint[1] + hs, tensor_small.size()[2] - 1)
-
-    p = tensor_small[:, hn:hx, xn:xx]
-    if p.size()[1] != patchsize or p.size()[2] != patchsize:
-        r = torch.zeros((3, patchsize, patchsize))
-        r[:, 0:p.size()[1], 0:p.size()[2]] = p
-        p = r
-    return p
-
-
 class BatchProvider(object):
     def __init__(self, base_provider, batch_size):
         self.batch_size = batch_size
