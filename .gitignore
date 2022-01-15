@@ -3,3 +3,6 @@ generator/
 
 __pycache__/
 images/
+**.png
+**.jpg
+**.A2V2f
