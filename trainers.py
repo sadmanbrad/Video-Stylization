@@ -109,5 +109,5 @@ class Trainer(object):
                     generated = generator(full_image.reshape((1,) + full_image.shape))
                     keras.utils.save_img(f'generated/{batch_num//1000:03}.png', generated[0],
                                          data_format='channels_last')
-                    generator.save('generator')
                     print(f"Eval of batch: {batch_num} took {(time.time() - eval_start)}", flush=True)
+                    generator.save('generator')

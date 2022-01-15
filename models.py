@@ -47,7 +47,7 @@ def make_smoother(filter_size, input_layer, kernel_size):
 def make_generator():
     resnet_blocks = 7
     filters = [32, 64, 128, 128, 128, 64]
-    input_channels = 3
+    input_channels = 6
     patch_size = (32, 32)
     input_shape = (None, None, input_channels)
 
@@ -73,7 +73,7 @@ def make_generator():
     conv11a = make_smoother(filters[5], conv11, (3, 3))
 
     conv12 = keras.layers.Conv2D(3, kernel_size=(1, 1), strides=(1, 1), padding='same', use_bias=True,
-                                 activation='tanh')(conv11a)
+                                 activation='sigmoid')(conv11a)
     return keras.Model(inputs=input_layer, outputs=conv12)
 
 

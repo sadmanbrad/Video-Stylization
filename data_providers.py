@@ -33,7 +33,7 @@ class BatchProvider(object):
 # Default "patch" dataset, used for training
 #####
 class PatchedDataProvider(object):
-    def __init__(self, x_dir, y_dir, patch_size):
+    def __init__(self, x_dir, y_dir, gauss_dir, patch_size):
         self.patch_size = patch_size
 
         self.paths_x = sorted(os.listdir(x_dir))
@@ -52,9 +52,13 @@ class PatchedDataProvider(object):
             p_png = os.path.splitext(p)[0] + '.png'
             image = PIL.Image.open(os.path.join(x_dir, p))
             image_stylized = PIL.Image.open(os.path.join(y_dir, p_png))
+            image_gauss = PIL.Image.open(os.path.join(gauss_dir, p_png))
 
+            image_gauss = keras.preprocessing.image.img_to_array(image_gauss)
             image = keras.preprocessing.image.img_to_array(image)
+            image_gauss = image_gauss[:, :, 0:3] / 255.0
             image = image[:, :, 0:3] / 255.0
+            image = np.dstack([image, image_gauss])
             image_stylized = keras.preprocessing.image.img_to_array(image_stylized)
             image_stylized = image_stylized[:, :, 0:3] / 255.0
 
