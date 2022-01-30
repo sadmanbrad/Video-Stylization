@@ -6,6 +6,9 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 
+max_training_time = 1200
+
+
 class Trainer(object):
     def __init__(self, generator_optimizer, discriminator_optimizer, train_dataset, perception_loss_model=None):
         self.generator_optimizer = generator_optimizer
@@ -56,6 +59,8 @@ class Trainer(object):
         return image_loss, perception_loss, adversarial_loss
 
     def train(self, generator, discriminator, epochs):
+        generator.compile()
+        discriminator.compile()
         batch_num = 0
         start = time.time()
         for e in range(epochs):
@@ -101,7 +106,12 @@ class Trainer(object):
                 batch_num += 1
 
                 if batch_num % 100 == 0:
-                    print(f"Batch num: {batch_num}, totally elapsed {(time.time() - start)}", flush=True)
+                    total_time = time.time() - start
+                    print(f"Batch num: {batch_num}, totally elapsed {total_time}", flush=True)
+                    if total_time > max_training_time and batch_num > 1000:
+                        print(f"Finishing training", flush=True)
+                        generator.save('generator')
+                        return
 
                 if batch_num % 1000 == 0:  # (time.time() - start) > 16:
                     eval_start = time.time()
