@@ -82,6 +82,8 @@ if __name__ == '__main__':
         if os.path.exists(flow_bwd_path):
             shutil.rmtree(flow_bwd_path)
         os.mkdir(flow_bwd_path)
+        if not os.path.exists("generated"):
+            os.mkdir("generated")
 
     step = 0
     if step >= args.skip:
