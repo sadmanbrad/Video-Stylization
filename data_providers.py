@@ -56,11 +56,11 @@ class PatchedDataProvider(object):
 
             image_gauss = keras.preprocessing.image.img_to_array(image_gauss)
             image = keras.preprocessing.image.img_to_array(image)
-            image_gauss = image_gauss[:, :, 0:3] / 255.0
-            image = image[:, :, 0:3] / 255.0
+            image_gauss = (image_gauss[:, :, 0:3] / 255.0 - 0.5) * 2
+            image = (image[:, :, 0:3] / 255.0 - 0.5) * 2
             image = np.dstack([image, image_gauss])
             image_stylized = keras.preprocessing.image.img_to_array(image_stylized)
-            image_stylized = image_stylized[:, :, 0:3] / 255.0
+            image_stylized = (image_stylized[:, :, 0:3] / 255.0 - 0.5) * 2
 
             self.images.append(image)
             self.images_stylized.append(image_stylized)

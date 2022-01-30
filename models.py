@@ -1,6 +1,7 @@
 from tensorflow import keras
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 
 def make_conv(filter_size, input_layer, kernel_size, strides):
@@ -61,19 +62,20 @@ def make_generator():
         resnet_block = make_resnet(filters[2], resnet_blocks_out, (3, 3), (1, 1))
         resnet_blocks_out = keras.layers.Add()([resnet_block, resnet_blocks_out])
 
-    upconv2_in = keras.layers.Concatenate()([resnet_blocks_out, conv2])
+    upconv2_in = keras.layers.Concatenate(axis=-1)([resnet_blocks_out, conv2])
     upconv2 = make_upconv(filters[3], upconv2_in, (3, 3), (1, 1))
 
-    upconv1_in = keras.layers.Concatenate()([upconv2, conv1])
+    upconv1_in = keras.layers.Concatenate(axis=-1)([upconv2, conv1])
     upconv1 = make_upconv(filters[4], upconv1_in, (3, 3), (1, 1))
 
+    conv11_in = keras.layers.Concatenate(axis=-1)([upconv1, conv0])
     conv11 = keras.layers.Conv2D(filters[5], kernel_size=(7, 7), strides=(1, 1), padding='same', use_bias=True,
-                                 activation='relu')(keras.layers.Concatenate()([upconv1, conv0]))
+                                 activation='relu')(conv11_in)
 
-    conv11a = make_smoother(filters[5], conv11, (3, 3))
+    # conv11a = make_smoother(filters[5], conv11, (3, 3))
 
     conv12 = keras.layers.Conv2D(3, kernel_size=(1, 1), strides=(1, 1), padding='same', use_bias=True,
-                                 activation='sigmoid')(conv11a)
+                                 activation='tanh')(conv11)
     return keras.Model(inputs=input_layer, outputs=conv12)
 
 
