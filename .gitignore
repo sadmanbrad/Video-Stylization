@@ -6,3 +6,10 @@ images/
 **.png
 **.jpg
 **.A2V2f
+
+flow_bwd
+flow_fwd
+input**
+keyframes
+output
+training_**
