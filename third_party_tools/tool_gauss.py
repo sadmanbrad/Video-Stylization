@@ -28,9 +28,7 @@ def generate_aux_video(start_index, end_index):
         keyframes_str += keyframe.replace(".png", "").replace(".jpg", "")
         keyframes_str += " "
 
-    print(f"gauss {keyframe_files} {flow_fwd_files} {flow_bwd_files} {start_index} {end_index} "
-                 f"{len(keyframes_list_dir)} {keyframes_str} 10 10 {gdisko_gauss_r10_s10_files}")
-    if os.system(f"gauss {keyframe_files} {flow_fwd_files} {flow_bwd_files} {start_index} {end_index} "
+    if os.system(f".\\third_party_tools\\gauss\\gauss.exe {keyframe_files} {flow_fwd_files} {flow_bwd_files} {start_index} {end_index} "
                  f"{len(keyframes_list_dir)} {keyframes_str} 10 10 {gdisko_gauss_r10_s10_files}") != 1:
         raise Exception('Failed to generate auxiliary channels')
     # if os.system(f"gauss {keyframe_files} {flow_fwd_files} {flow_bwd_files} {start_index} {end_index} "

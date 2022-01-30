@@ -41,7 +41,7 @@ def resolve_video(network, path_to_video, result):
 
     while cap.isOpened():
         ret, frame = cap.read()
-        #frame = cv2.resize(frame, (256, 256), interpolation = cv2.INTER_LINEAR) 
+        #frame = cv2.resize(frame, (256, 256), interpolation = cv2.INTER_LINEAR)
 
         print('Transfering video...')
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -62,14 +62,6 @@ def resolve_video(network, path_to_video, result):
     cap.release()
     out.release()
     cv2.destroyALLWindow()
-
-
-def create_folder(diirname):
-    if not os.path.exists(diirname):
-        os.mkdir(diirname)
-        print('Directory ', diirname, ' createrd')
-    else:
-        print('Directory ', diirname, ' already exists')       
 
 
 def clip_0_1(image):

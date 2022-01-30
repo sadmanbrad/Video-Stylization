@@ -147,6 +147,6 @@ def generate_image(samples, width, height, scale=10):
         for y in range(max(0, int(point[1] // scale) - radius), min(height, int(point[1] // scale) + radius)):
             for x in range(max(0, int(point[0] // scale) - radius), min(width, int(point[0] // scale) + radius)):
                 img[y][x] = (color - img[y][x]) * (
-                            np.e ** (-((x - point[0] // scale) ** 2 + (y - point[1] // scale) ** 2) / (sigma * sigma))) \
+                            np.e ** (-((x - point[0] // scale) ** 2 + (y - point[1] // scale) ** 2) / (sigma * sigma)))\
                             + img[y][x]
     return img

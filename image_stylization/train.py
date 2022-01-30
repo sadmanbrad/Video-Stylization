@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from modules.utils import tensor_to_image, load_img, create_folder, clip_0_1
+from modules.utils import tensor_to_image, load_img, clip_0_1
 from tensorflow.keras.applications.vgg19 import preprocess_input
 from modules.forward import feed_forward
 
